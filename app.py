@@ -95,7 +95,7 @@ def submit_review():
     review_text = request.form.get("review_text", "").strip()
     rating_raw = request.form.get("rating", "")
     consent = request.form.get("review_consent")
-
+    email = request.form.get("email", "").strip()
     try:
         rating = int(rating_raw)
     except (TypeError, ValueError):
@@ -216,14 +216,24 @@ def admin_logout():
 def submit():
     name = request.form.get("name", "").strip()
     phone = request.form.get("phone", "").strip()
+    email = request.form.get("email", "").strip()
     message = request.form.get("message", "").strip()
     consent = request.form.get("consent")
 
-    if not name or not phone:
-        return "Заполните имя и телефон.", 400
+    if not name or not phone or not email:
+        return "Заполните имя, телефон и E-mail.", 400
 
     if consent != "yes":
         return "Необходимо согласие на обработку персональных данных.", 400
+
+    answers = []
+    for i in range(1, 16):
+        selected = request.form.getlist(f"q{i}")
+        answers.append(
+            f"Вопрос {i}: {', '.join(selected) if selected else 'Не отвечено'}"
+        )
+
+    questionnaire_text = "\n".join(answers)
 
     email_user = os.environ.get("MAIL_USER")
     email_password = os.environ.get("MAIL_PASSWORD")
@@ -237,11 +247,14 @@ def submit():
     letter["Subject"] = "Новая заявка с сайта"
     letter["From"] = email_user
     letter["To"] = email_to
+
     letter.set_content(
         f"Новая заявка с сайта\n\n"
         f"Имя: {name}\n"
         f"Телефон: {phone}\n"
-        f"Сообщение: {message}"
+        f"E-mail: {email}\n"
+        f"Комментарий: {message}\n\n"
+        f"Ответы на анкету:\n{questionnaire_text}"
     )
 
     try:
