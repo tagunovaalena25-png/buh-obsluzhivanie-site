@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Модерация отзывов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 850px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #222;
+        }
+        .review {
+            background: white;
+            padding: 18px;
+            margin: 15px 0;
+            border-radius: 10px;
+        }
+        button {
+            padding: 10px 14px;
+            margin: 5px 5px 5px 0;
+            cursor: pointer;
+        }
+        input {
+            padding: 10px;
+            margin: 5px 0 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Модерация отзывов</h1>
+
+    {% if not logged_in %}
+        <form method="post" action="{{ url_for('admin') }}">
+            <label for="password">Пароль администратора</label><br>
+            <input id="password" type="password" name="password" required>
+            <br>
+            <button type="submit">Войти</button>
+        </form>
+    {% else %}
+        {% for review in reviews %}
+            <div class="review">
+                <h3>{{ review["name"] }} — {{ review["rating"] }}/5</h3>
+                <p>{{ review["text"] }}</p>
+                <p>Статус: {{ review["status"] }}</p>
+
+                {% if review["status"] != "approved" %}
+                    <form method="post"
+                          action="{{ url_for('moderate_review', review_id=review['id'], action='approve') }}">
+                        <button type="submit">Одобрить публикацию</button>
+                    </form>
+                {% else %}
+                    <form method="post"
+                          action="{{ url_for('moderate_review', review_id=review['id'], action='hide') }}">
+                        <button type="submit"
+                                onclick="return confirm('Отклонить этот отзыв?')">
+                          Отклонить
+                      </button>
+                   </form>
+                    <form method="post"
+                          action="{{ url_for('moderate_review', review_id=review['id'], action='hide') }}">
+                        <button type="submit">Скрыть отзыв</button>
+                    </form>
+                {% endif %}
+            </div>
+        {% else %}
+            <p>Пока отзывов нет.</p>
+        {% endfor %}
+
+        <form method="post" action="{{ url_for('admin_logout') }}">
+            <button type="submit">Выйти</button>
+        </form>
+    {% endif %}
+
+    <p><a href="/">Вернуться на сайт</a></p>
+</body>
+</html>
