@@ -458,9 +458,9 @@ form a[href*="consent"]:hover {
     font-size: 9px;
 }
 .mug img {
-    width: 35px;
-    height: auto;
-    max-height: 35px;
+    width: 46px;
+    height: 46px;
+    max-height: 46px;
     object-fit: contain;
     position: relative;
     z-index: 1;
@@ -494,4 +494,9 @@ form a[href*="consent"]:hover {
     flex: 0 0 16px;
     padding: 0;
     margin: 3px 0 0;
+}
+.footer-logo {
+    width: 100px;
+    height: auto;
+    object-fit: contain;
 }
