@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Бухгалтерское обслуживание, кадровый учёт и налоговое сопровождение для бизнеса.">
-  <title>Бух Обслуживание — бухгалтерия для бизнеса</title>
+  <title>БухОбслуживание — бухгалтерия для бизнеса</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -64,7 +64,7 @@
     <div class="desk"></div>
     <div class="laptop"></div>
    <div class="mug">
-    <img src="{{ url_for('static', filename='logo.png') }}" alt="1С">
+    <img src="{{ url_for('static', filename='logo4.png') }}" alt="1С">
 </div>
 </div>
   </section>
@@ -192,6 +192,13 @@
       </div>
 
       <div class="service-card">
+        <h3>Регистрация ООО и ИП</h3>
+        <p class="service-subtitle">Открытие бизнеса под ключ</p>
+        <p>Помощь с подготовкой документов и регистрацией бизнеса.</p>
+        <div class="service-price">цена по договоренности</div>
+      </div>
+
+      <div class="service-card">
         <h3>Консультация специалиста</h3>
         <p class="service-subtitle">Программа и консультация</p>
         <p>Консультации по налогообложению, бухгалтерскому учету, обучение программе 1С.</p>
@@ -203,6 +210,20 @@
         <p class="service-subtitle">Расчет ЗП</p>
         <p>Расчет заработной платы.</p>
         <div class="service-price">от 2 900 ₽/мес</div>
+      </div>
+ 
+      <div class="service-card">
+        <h3>Закрытие ИП</h3>
+        <p class="service-subtitle">Прекращение деятельности ИП быстро и легко</p>
+        <p>Подготовка и подача документов для прекращения деятельности ИП.</p>
+        <div class="service-price">цена по договоренности</div>
+      </div>
+
+      <div class="service-card">
+        <h3>Упрощенная ликвидация ООО</h3>
+        <p class="service-subtitle">Закрытие ООО без сложной процедуры</p>
+        <p>Подготовка документов и сопровождение закрытия ООО.</p>
+        <div class="service-price">цена по договоренности</div>
       </div>
 
       <div class="service-card">
@@ -258,10 +279,14 @@
 
 <footer class="footer" id="privacy">
   <div class="container footer-grid">
-    <a class="brand footer-brand" href="#home"><span class="brand-mark">1С☁</span><span>Бух Обслуживание</span></a>
+   <a class="brand footer-brand" href="#home">
+    <img src="{{ url_for('static', filename='logo4.png') }}"
+         alt="Логотип 1С:БухОбслуживание"
+         class="footer-logo">
+</a>
     <p><strong>ООО «Татверк»</strong><br>ИНН 6439080067</p>
     <p><a href="/privacy">Политика конфиденциальности</a><br><a href="/privacy">Согласие на обработку персональных данных</a></p>
-    <p>© {{ year }} Бух Обслуживание.<br>Все права защищены.</p>
+    <p>© {{ year }} БухОбслуживание.<br>Все права защищены.</p>
   </div>
 </footer>
 </body>
