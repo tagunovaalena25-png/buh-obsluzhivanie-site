@@ -10,7 +10,9 @@
 <body>
 <header class="header">
   <div class="container nav">
-    <a class="brand" href="#home"><span class="brand-mark">1С☁</span><span>Бух Обслуживание</span></a>
+  <img src="{{ url_for('static', filename='logo.png') }}"
+     alt="1С:БухОбслуживание"
+     class="site-logo">
     <nav>
       <a href="#home">Главная</a><a href="#about">О компании</a><a href="#services">Наша работа</a>
       <a href="#benefits">Преимущества</a><a href="#reviews">Отзывы</a><a href="#products-services">Товары и услуги</a><a href="#contacts">Контакты</a>
@@ -36,14 +38,35 @@
           <span><b>♡</b> Профессиональная команда</span>
         </div>
       </div>
-      <div class="hero-scene" aria-label="Иллюстрация рабочего места">
-        <div class="scene-wall">
-          <div class="plant"><i></i><i></i><i></i></div>
-          <div class="wall-brand"><strong>1С☁</strong><span>Бух Обслуживание</span></div>
+    <div class="hero-scene" aria-label="Иллюстрация рабочего места">
+    <div class="scene-wall">
+       <div class="plant">
+  <svg viewBox="0 0 100 150" aria-hidden="true">
+    <path d="M50 125 C25 105 75 95 48 75 C25 58 72 52 52 30 C45 20 55 12 65 8"
+          fill="none" stroke="#557c3d" stroke-width="3"
+          stroke-linecap="round"/>
+    <path d="M43 105 C22 100 17 85 18 76 C33 78 44 89 43 105Z"
+          fill="#688d48"/>
+    <path d="M57 82 C76 78 82 65 80 56 C65 59 55 69 57 82Z"
+          fill="#76994e"/>
+    <path d="M42 55 C25 48 24 35 28 28 C42 34 48 43 42 55Z"
+          fill="#688d48"/>
+    <path d="M58 30 C72 25 77 14 73 7 C61 12 55 20 58 30Z"
+          fill="#76994e"/>
+    <path d="M25 125 H75 L69 148 H31Z" fill="#c89e70"/>
+    <path d="M23 123 H77 V130 H23Z" fill="#b88960"/>
+  </svg>
+</div>
+        <div class="wall-brand">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="1С:БухОбслуживание">
         </div>
-        <div class="desk"></div><div class="laptop"></div><div class="mug">1С<small>Бух</small></div>
-      </div>
     </div>
+    <div class="desk"></div>
+    <div class="laptop"></div>
+   <div class="mug">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="1С">
+</div>
+</div>
   </section>
 
   <section class="section" id="about">
@@ -54,7 +77,7 @@
         <p class="muted">Наша миссия — сделать бухгалтерию простой, прозрачной и надёжной для каждого клиента.</p>
         <div class="stats">
           <div><span class="stat-icon">▣</span><strong>13 лет</strong><small>на рынке</small></div>
-          <div><span class="stat-icon">♧</span><strong>50+</strong><small>клиентов</small></div>
+          <div><span class="stat-icon">♧</span><strong>70+</strong><small>клиентов</small></div>
           <div><span class="stat-icon">▤</span><strong>Ежемесячно</strong><small>отчётность для клиентов</small></div>
           <div><span class="stat-icon">◷</span><strong>24/7</strong><small>поддержка</small></div>
         </div>
@@ -97,16 +120,8 @@
 
  <section class="section section-grey" id="reviews">
   <div class="container">
-    <h2>Нам доверяют и работали с нами</h2>
-
-    <div class="partners">
-      <span>СУПЕРСПОРТ</span>
-      <span>ИКС-СПОРТ</span>
-      <span>ТОРГОВЫЙ ДОМ ГРАНТ-ШМИДТ</span>
-      <span>КСП-КЛАС</span>
-    </div>
-
-    <h3>Отзывы наших клиентов</h3>
+ 
+    <h2>Отзывы наших клиентов</h2>
 
     <div class="reviews-list">
       {% if reviews %}
@@ -173,35 +188,29 @@
         <h3>Ведение бухгалтерского и налогового учета</h3>
         <p class="service-subtitle">Комплексный сервис 1С:БухОбслуживание</p>
         <p>Ведение бухгалтерского и налогового учета в 1С, сдача отчетности.</p>
-        <div class="service-price">от 2 000 ₽/мес</div>
+        <div class="service-price">от 2 900 ₽/мес</div>
       </div>
 
       <div class="service-card">
         <h3>Консультация специалиста</h3>
         <p class="service-subtitle">Программа и консультация</p>
         <p>Консультации по налогообложению, бухгалтерскому учету, обучение программе 1С.</p>
-        <div class="service-price">1 500 ₽</div>
+        <div class="service-price">2 900 ₽</div>
       </div>
 
       <div class="service-card">
         <h3>Расчет заработной платы</h3>
         <p class="service-subtitle">Расчет ЗП</p>
         <p>Расчет заработной платы.</p>
-        <div class="service-price">от 2 940 ₽/мес</div>
+        <div class="service-price">от 2 900 ₽/мес</div>
       </div>
 
       <div class="service-card">
         <h3>Кадровый учет и расчет зарплаты</h3>
         <p class="service-subtitle">Кадровый учет и кадровое делопроизводство</p>
         <p>Кадровый учет и расчет заработной платы.</p>
-        <div class="service-price">от 3 540 ₽/мес</div>
-      </div>
-
-      <div class="service-card">
-        <h3>Сдача отчетности</h3>
-        <p class="service-subtitle">Сервис 1С:БухОбслуживание.Отчетность</p>
-        <p>Сдача бухгалтерской и налоговой отчетности через интернет.</p>
-        <div class="service-price">от 500 ₽/мес</div>
+        <div class="service-price">от 2 900 ₽/мес</div>
+       </div>
       </div>
     </div>
   </div>
