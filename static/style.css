@@ -480,3 +480,18 @@ form a[href*="consent"]:hover {
     height: 100%;
     overflow: visible;
 }
+/* Размер галочки согласия в форме заявки */
+.form .consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+}
+
+.form .consent input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    flex: 0 0 16px;
+    padding: 0;
+    margin: 3px 0 0;
+}
