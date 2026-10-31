@@ -338,7 +338,7 @@ form a[href*="consent"]:hover {
 
 /* Увеличиваем поле сообщения */
 #contacts form textarea {
-    min-height: 125px;
+    min-height: 100px;
     resize: vertical;
 }
 /* Увеличиваем карту на сайте */
@@ -499,4 +499,84 @@ form a[href*="consent"]:hover {
     width: 100px;
     height: auto;
     object-fit: contain;
+}
+.questionnaire {
+    margin: 20px 0;
+    padding: 18px;
+    border: 1px solid #e0e6ed;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.questionnaire h3 {
+    margin: 0 0 15px;
+}
+
+.question-row {
+    padding: 12px 0;
+    border-bottom: 1px solid #e8edf2;
+}
+
+.question-row:last-child {
+    border-bottom: none;
+}
+
+.question-row p {
+    margin: 0 0 9px;
+    font-weight: 600;
+}
+
+.question-row label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 4px 14px 4px 0;
+    font-size: 14px;
+}
+
+.question-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+}
+.questionnaire {
+    margin: 20px 0;
+    padding: 18px;
+    border: 1px solid #e0e6ed;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.questionnaire h3 {
+    margin: 0 0 15px;
+}
+
+.question-row {
+    padding: 12px 0;
+    border-bottom: 1px solid #e8edf2;
+}
+
+.question-row:last-child {
+    border-bottom: none;
+}
+
+.question-row p {
+    margin: 0 0 9px;
+    font-weight: 600;
+}
+
+.question-row label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 4px 14px 4px 0;
+    font-size: 14px;
+}
+
+.question-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
 }
