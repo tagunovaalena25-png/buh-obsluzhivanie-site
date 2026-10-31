@@ -484,7 +484,7 @@ form a[href*="consent"]:hover {
 .form .consent {
     display: flex;
     align-items: flex-start;
-    gap: 9px;
+    gap: 5px;
 }
 
 .form .consent input[type="checkbox"] {
@@ -599,4 +599,54 @@ form a[href*="consent"]:hover {
     margin: 0;
     border-radius: 50%;
     flex: 0 0 20px;
+}
+.reviews-heading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.reviews-heading h2 {
+    margin: 0;
+}
+
+.average-rating {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 15px;
+}
+
+.rating-stars {
+    color: #f5b400;
+    letter-spacing: 1px;
+}
+
+@media (max-width: 600px) {
+    .reviews-heading {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+.rating-stars {
+    position: relative;
+    display: inline-block;
+    font-size: 22px;
+    letter-spacing: 1px;
+    line-height: 1;
+}
+
+.stars-empty {
+    color: #c9c9c9;
+}
+
+.stars-filled {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    color: #f5b400;
 }
