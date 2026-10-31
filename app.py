@@ -66,7 +66,6 @@ def index():
             print("Имя:", name)
             print("Телефон:", phone)
             print("Email:", request.form.get("email", "").strip())
-            print("Комментарий:", request.form.get("message", "").strip())
             print("--------------------\n")
             sent = True
 
@@ -225,13 +224,10 @@ def submit():
 
     if consent != "yes":
         return "Необходимо согласие на обработку персональных данных.", 400
-
     answers = []
-    for i in range(1, 16):
-        selected = request.form.getlist(f"q{i}")
-        answers.append(
-            f"Вопрос {i}: {', '.join(selected) if selected else 'Не отвечено'}"
-        )
+    for i in range(1, 11):
+        selected = request.form.get(f"q{i}", "").strip()
+        answers.append(f"Вопрос {i}: {selected or 'Не указано'}")
 
     questionnaire_text = "\n".join(answers)
 
@@ -253,7 +249,6 @@ def submit():
         f"Имя: {name}\n"
         f"Телефон: {phone}\n"
         f"E-mail: {email}\n"
-        f"Комментарий: {message}\n\n"
         f"Ответы на анкету:\n{questionnaire_text}"
     )
 
