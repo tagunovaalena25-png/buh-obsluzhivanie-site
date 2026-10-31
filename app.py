@@ -52,7 +52,6 @@ def index():
     sent = False
     error = None
 
-    # Обработка старой формы заявки, если она отправляется на /
     if request.method == "POST":
         name = request.form.get("name", "").strip()
         phone = request.form.get("phone", "").strip()
@@ -77,12 +76,23 @@ def index():
             ORDER BY id DESC
         """).fetchall()
 
+        rating_data = db.execute("""
+            SELECT AVG(rating), COUNT(*)
+            FROM reviews
+            WHERE status = 'approved'
+        """).fetchone()
+
+    average_rating = round(rating_data[0], 1) if rating_data[0] is not None else 0
+    rating_count = rating_data[1]
+
     return render_template(
         "index.html",
         sent=sent,
         error=error,
         year=datetime.now().year,
-        reviews=reviews
+        reviews=reviews,
+        average_rating=average_rating,
+        rating_count=rating_count
     )
 
 
@@ -182,23 +192,35 @@ def admin():
 @app.route("/admin/review/<int:review_id>/<action>", methods=["POST"])
 @admin_required
 def moderate_review(review_id, action):
-    if action == "approve":
-        status = "approved"
-    elif action == "hide":
-        status = "pending"
-    else:
-        abort(404)
-
     with get_db() as db:
-        result = db.execute(
-            "UPDATE reviews SET status = ? WHERE id = ?",
-            (status, review_id)
-        )
+        if action == "approve":
+            result = db.execute(
+                "UPDATE reviews SET status = 'approved' WHERE id = ?",
+                (review_id,)
+            )
+            message = "Отзыв опубликован."
+
+        elif action == "hide":
+            result = db.execute(
+                "UPDATE reviews SET status = 'pending' WHERE id = ?",
+                (review_id,)
+            )
+            message = "Отзыв скрыт."
+
+        elif action == "delete":
+            result = db.execute(
+                "DELETE FROM reviews WHERE id = ?",
+                (review_id,)
+            )
+            message = "Отзыв удалён."
+
+        else:
+            abort(404)
 
     if result.rowcount == 0:
         abort(404)
 
-    flash("Статус отзыва изменён.", "success")
+    flash(message, "success")
     return redirect(url_for("admin"))
 
 
@@ -207,7 +229,6 @@ def moderate_review(review_id, action):
 def admin_logout():
     session.clear()
     return redirect(url_for("admin"))
-
 
 # ---------- ОТПРАВКА ЗАЯВКИ НА ПОЧТУ ----------
 
