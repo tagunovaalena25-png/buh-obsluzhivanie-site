@@ -48,24 +48,26 @@
                 <p>Статус: {{ review["status"] }}</p>
 
                 {% if review["status"] != "approved" %}
-                    <form method="post"
-                          action="{{ url_for('moderate_review', review_id=review['id'], action='approve') }}">
-                        <button type="submit">Одобрить публикацию</button>
-                    </form>
-                {% else %}
-                    <form method="post"
-                          action="{{ url_for('moderate_review', review_id=review['id'], action='hide') }}">
-                        <button type="submit"
-                                onclick="return confirm('Отклонить этот отзыв?')">
-                          Отклонить
-                      </button>
-                   </form>
-                    <form method="post"
-                          action="{{ url_for('moderate_review', review_id=review['id'], action='hide') }}">
-                        <button type="submit">Скрыть отзыв</button>
-                    </form>
-                {% endif %}
-            </div>
+    <form method="post"
+          action="{{ url_for('moderate_review', review_id=review['id'], action='approve') }}"
+          style="display: inline-block;">
+        <button type="submit">Одобрить публикацию</button>
+    </form>
+{% else %}
+    <form method="post"
+          action="{{ url_for('moderate_review', review_id=review['id'], action='hide') }}"
+          style="display: inline-block;">
+        <button type="submit">Скрыть отзыв</button>
+    </form>
+{% endif %}
+
+<form method="post"
+      action="{{ url_for('moderate_review', review_id=review['id'], action='delete') }}"
+      style="display: inline-block;"
+      onsubmit="return confirm('Точно удалить отзыв?')">
+    <button type="submit">Удалить отзыв</button>
+</form>
+
         {% else %}
             <p>Пока отзывов нет.</p>
         {% endfor %}
