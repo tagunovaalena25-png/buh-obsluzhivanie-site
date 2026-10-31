@@ -122,7 +122,17 @@
  <section class="section section-grey" id="reviews">
   <div class="container">
  
+<div class="reviews-heading">
     <h2>Отзывы наших клиентов</h2>
+    <div class="average-rating">
+    <span class="rating-stars">
+        <span class="stars-empty">★★★★★</span>
+        <span class="stars-filled" style="width: {{ (average_rating / 5 * 100) if rating_count > 0 else 0 }}%">★★★★★</span>
+    </span>
+    <strong>{{ average_rating }} / 5</strong>
+    <span>({{ rating_count }})</span>
+</div>
+</div>
 
     <div class="reviews-list">
       {% if reviews %}
@@ -258,7 +268,8 @@
         <input name="name" placeholder="Ваше имя" required maxlength="100">
         <input name="phone" type="tel" placeholder="Телефон" required maxlength="40">
     </div>
-
+<label for="email">Email</label>
+<input type="email" id="email" name="email" placeholder="Ваш email">
 <div class="questionnaire">
     <h3>Информация о вашей компании</h3>
 
