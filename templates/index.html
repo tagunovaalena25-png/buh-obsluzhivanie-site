@@ -16,7 +16,7 @@
      class="site-logo">
     <nav>
       <a href="#home">Главная</a><a href="#about">О компании</a><a href="#services">Наша работа</a>
-      <a href="#benefits">Преимущества</a><a href="#reviews">Отзывы</a><a href="#products-services">Товары и услуги</a><a href="#contacts">Контакты</a>
+      <a href="#benefits">Преимущества</a><a href="#reviews">Отзывы</a><a href="#products-services">Товары и услуги</a><a href="/calculator">Калькулятор услуг</a><a href="#contacts">Контакты</a><a href="#map">Карта</a>
     </nav>
     <a class="button small" href="tel:+79372696166">☎ Позвонить</a>
   </div>
@@ -199,7 +199,7 @@
         <h3>Ведение бухгалтерского и налогового учета</h3>
         <p class="service-subtitle">Комплексный сервис 1С:БухОбслуживание</p>
         <p>Ведение бухгалтерского и налогового учета в 1С, сдача отчетности.</p>
-        <div class="service-price">от 2 900 ₽/мес</div>
+        <div class="service-price">1 500 ₽/час</div>
       </div>
 
       <div class="service-card">
@@ -220,7 +220,7 @@
         <h3>Расчет заработной платы</h3>
         <p class="service-subtitle">Расчет ЗП</p>
         <p>Расчет заработной платы.</p>
-        <div class="service-price">от 2 900 ₽/мес</div>
+        <div class="service-price">1 500 ₽/час</div>
       </div>
  
       <div class="service-card">
@@ -241,8 +241,12 @@
         <h3>Кадровый учет и расчет зарплаты</h3>
         <p class="service-subtitle">Кадровый учет и кадровое делопроизводство</p>
         <p>Кадровый учет и расчет заработной платы.</p>
-        <div class="service-price">от 2 900 ₽/мес</div>
+        <div class="service-price">1 500 ₽/час</div>
        </div>
+<div class="service-card calculator-card">
+   <h3>Калькулятор услуг</h3>
+<p class="calculator-subtitle">Рассчитайте предварительную стоимость бухгалтерского обслуживания.</p>    <a href="{{ url_for('calculator') }}">Нажмите, чтобы открыть калькулятор →</a>
+</div>
       </div>
     </div>
   </div>
@@ -340,6 +344,7 @@
     <button class="button submit" type="submit">Отправить заявку →</button>
 </form>
         </div>
+<section id="map">
      <div style="position:relative;overflow:hidden;"><a href="https://yandex.ru/maps/org/1s_bukhobsluzhivaniye_tatverk/11966886410/?utm_medium=mapframe&utm_source=maps" style="color:#eee;font-size:12px;position:absolute;top:0px;">1С: БухОбслуживание. Татверк</a><a href="https://yandex.ru/maps/11143/balakovo/category/accountants/184105392/?utm_medium=mapframe&utm_source=maps" style="color:#eee;font-size:12px;position:absolute;top:14px;">Бухгалтерские услуги в Балакове</a><a href="https://yandex.ru/maps/11143/balakovo/category/outsourcing/265368577/?utm_medium=mapframe&utm_source=maps" style="color:#eee;font-size:12px;position:absolute;top:28px;">Аутсорсинг в Балакове</a><iframe src="https://yandex.ru/map-widget/v1/org/1s_bukhobsluzhivaniye_tatverk/11966886410/?ll=47.787828%2C52.031708&z=19.2" width="560" height="400" frameborder="1" allowfullscreen="true" style="position:relative;"></iframe></div>
   </section>
 </main>
