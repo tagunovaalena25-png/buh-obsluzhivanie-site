@@ -650,3 +650,29 @@ form a[href*="consent"]:hover {
     white-space: nowrap;
     color: #f5b400;
 }
+.calculator-card {
+    grid-column: span 1;
+}
+
+}
+.calculator-card h3 {
+    text-align: center;
+}
+.calculator-card a {
+    color: #7F6B1A;
+    text-decoration: underline;
+}
+.calculator-card p {
+    margin-top: 0;
+}
+.calculator-card .calculator-description {
+    margin-top: 0;
+}
+.calculator-card .calculator-subtitle {
+    color: #982828;
+    font-weight: bold;
+    margin-top: 0;
+}
+.calculator-card .calculator-subtitle {
+    margin-top: 30px;
+}
