@@ -1,300 +1,365 @@
-import os
-import sqlite3
-import smtplib
-from dotenv import load_dotenv
-
-load_dotenv()
-from email.message import EmailMessage
-from datetime import datetime
-from functools import wraps
-
-from flask import (
-    Flask, render_template, request, redirect,
-    url_for, flash, session, abort
-)
-
-app = Flask(__name__)
-
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-this-key")
-
-DATABASE = os.path.join(app.root_path, "reviews.db")
-
-
-# ---------- БАЗА ОТЗЫВОВ ----------
-
-def get_db():
-    db = sqlite3.connect(DATABASE)
-    db.row_factory = sqlite3.Row
-    return db
-
-
-def init_db():
-    with get_db() as db:
-        db.execute("""
-            CREATE TABLE IF NOT EXISTS reviews (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
-                text TEXT NOT NULL,
-                status TEXT NOT NULL DEFAULT 'pending',
-                created_at TEXT NOT NULL
-            )
-        """)
-
-
-init_db()
-
-
-# ---------- ГЛАВНАЯ СТРАНИЦА ----------
-@app.route("/calculator")
-def calculator():
-    return render_template("calculator.html")
-
-@app.route("/", methods=["GET", "POST"])
-def index():
-    sent = False
-    error = None
-
-    if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        phone = request.form.get("phone", "").strip()
-        consent = request.form.get("consent")
-
-        if not name or not phone or consent != "yes":
-            error = "Заполните имя и телефон и подтвердите согласие."
-        else:
-            print("\n--- Новая заявка ---")
-            print("Время:", datetime.now().isoformat(timespec="seconds"))
-            print("Имя:", name)
-            print("Телефон:", phone)
-            print("Email:", request.form.get("email", "").strip())
-            print("--------------------\n")
-            sent = True
-
-    with get_db() as db:
-        reviews = db.execute("""
-            SELECT name, rating, text, created_at
-            FROM reviews
-            WHERE status = 'approved'
-            ORDER BY id DESC
-        """).fetchall()
-
-        rating_data = db.execute("""
-            SELECT AVG(rating), COUNT(*)
-            FROM reviews
-            WHERE status = 'approved'
-        """).fetchone()
-
-    average_rating = round(rating_data[0], 1) if rating_data[0] is not None else 0
-    rating_count = rating_data[1]
-
-    return render_template(
-        "index.html",
-        sent=sent,
-        error=error,
-        year=datetime.now().year,
-        reviews=reviews,
-        average_rating=average_rating,
-        rating_count=rating_count
-    )
-
-
-# ---------- ОТПРАВКА ОТЗЫВА ----------
-
-@app.route("/reviews", methods=["POST"])
-def submit_review():
-    name = request.form.get("review_name", "").strip()
-    review_text = request.form.get("review_text", "").strip()
-    rating_raw = request.form.get("rating", "")
-    consent = request.form.get("review_consent")
-    email = request.form.get("email", "").strip()
-    try:
-        rating = int(rating_raw)
-    except (TypeError, ValueError):
-        rating = 0
-
-    if not name or not review_text:
-        return "Заполните имя и текст отзыва.", 400
-
-    if len(name) > 100 or len(review_text) > 2000:
-        return "Имя или отзыв слишком длинные.", 400
-
-    if rating not in range(1, 6):
-        return "Выберите оценку от 1 до 5.", 400
-
-    if consent != "yes":
-        return "Необходимо согласие на обработку персональных данных.", 400
-
-    with get_db() as db:
-        db.execute("""
-            INSERT INTO reviews
-                (name, rating, text, status, created_at)
-            VALUES (?, ?, ?, 'pending', ?)
-        """, (
-            name,
-            rating,
-            review_text,
-            datetime.now().isoformat(timespec="seconds")
-        ))
-
-    flash("Спасибо! Отзыв отправлен на проверку.", "success")
-    return redirect(url_for("index") + "#reviews")
-
-
-# ---------- ВХОД АДМИНИСТРАТОРА ----------
-
-def admin_required(view):
-    @wraps(view)
-    def wrapped(*args, **kwargs):
-        if not session.get("is_admin"):
-            return redirect(url_for("admin"))
-        return view(*args, **kwargs)
-    return wrapped
-
-
-@app.route("/admin", methods=["GET", "POST"])
-def admin():
-    if request.method == "POST" and not session.get("is_admin"):
-        password = os.environ.get("ADMIN_PASSWORD")
-
-        if not password:
-            return "Не настроен пароль администратора.", 503
-
-        if request.form.get("password", "") == password:
-            session.clear()
-            session["is_admin"] = True
-            return redirect(url_for("admin"))
-
-        flash("Неверный пароль.", "error")
-
-    if not session.get("is_admin"):
-        return render_template(
-            "admin.html",
-            logged_in=False,
-            reviews=[]
-        )
-
-    with get_db() as db:
-        reviews = db.execute("""
-            SELECT id, name, rating, text, status, created_at
-            FROM reviews
-            ORDER BY
-                CASE WHEN status = 'pending' THEN 0 ELSE 1 END,
-                id DESC
-        """).fetchall()
-
-    return render_template(
-        "admin.html",
-        logged_in=True,
-        reviews=reviews
-    )
-
-
-# ---------- ОДОБРЕНИЕ И СКРЫТИЕ ----------
-
-@app.route("/admin/review/<int:review_id>/<action>", methods=["POST"])
-@admin_required
-def moderate_review(review_id, action):
-    with get_db() as db:
-        if action == "approve":
-            result = db.execute(
-                "UPDATE reviews SET status = 'approved' WHERE id = ?",
-                (review_id,)
-            )
-            message = "Отзыв опубликован."
-
-        elif action == "hide":
-            result = db.execute(
-                "UPDATE reviews SET status = 'pending' WHERE id = ?",
-                (review_id,)
-            )
-            message = "Отзыв скрыт."
-
-        elif action == "delete":
-            result = db.execute(
-                "DELETE FROM reviews WHERE id = ?",
-                (review_id,)
-            )
-            message = "Отзыв удалён."
-
-        else:
-            abort(404)
-
-    if result.rowcount == 0:
-        abort(404)
-
-    flash(message, "success")
-    return redirect(url_for("admin"))
-
-
-@app.route("/admin/logout", methods=["POST"])
-@admin_required
-def admin_logout():
-    session.clear()
-    return redirect(url_for("admin"))
-
-# ---------- ОТПРАВКА ЗАЯВКИ НА ПОЧТУ ----------
-
-@app.route("/submit", methods=["POST"])
-def submit():
-    name = request.form.get("name", "").strip()
-    phone = request.form.get("phone", "").strip()
-    email = request.form.get("email", "").strip()
-    message = request.form.get("message", "").strip()
-    consent = request.form.get("consent")
-
-    if not name or not phone or not email:
-        return "Заполните имя, телефон и E-mail.", 400
-
-    if consent != "yes":
-        return "Необходимо согласие на обработку персональных данных.", 400
-    answers = []
-    for i in range(1, 11):
-        selected = request.form.get(f"q{i}", "").strip()
-        answers.append(f"Вопрос {i}: {selected or 'Не указано'}")
-
-    questionnaire_text = "\n".join(answers)
-
-    email_user = os.environ.get("MAIL_USER")
-    email_password = os.environ.get("MAIL_PASSWORD")
-    email_to = os.environ.get("MAIL_TO")
-
-    if not email_user or not email_password or not email_to:
-        app.logger.error("Не настроены переменные почты")
-        return "Отправка заявок временно недоступна.", 500
-
-    letter = EmailMessage()
-    letter["Subject"] = "Новая заявка с сайта"
-    letter["From"] = email_user
-    letter["To"] = email_to
-
-    letter.set_content(
-        f"Новая заявка с сайта\n\n"
-        f"Имя: {name}\n"
-        f"Телефон: {phone}\n"
-        f"E-mail: {email}\n"
-        f"Ответы на анкету:\n{questionnaire_text}"
-    )
-
-    try:
-        with smtplib.SMTP_SSL("smtp.yandex.ru", 465) as server:
-            server.login(email_user, email_password)
-            server.send_message(letter)
-    except Exception:
-        app.logger.exception("Не удалось отправить заявку")
-        return "Не удалось отправить заявку. Попробуйте позже.", 500
-
-    return """
-        <h2>Спасибо! Заявка отправлена.</h2>
-        <a href="/">Вернуться на сайт</a>
-    """
-
-
-# ---------- ПОЛИТИКА ----------
-
-@app.route("/privacy")
-def privacy():
-    return render_template("privacy.html")
-
-if __name__ == "__main__":
-    app.run(debug=True)
+<!doctype html>
+<html lang="ru">
+<head>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='faviconka.png') }}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Бухгалтерское обслуживание, кадровый учёт и налоговое сопровождение для бизнеса.">
+  <title>БухОбслуживание — бухгалтерия для бизнеса</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="header">
+  <div class="container nav">
+  <img src="{{ url_for('static', filename='logo.png') }}"
+     alt="1С:БухОбслуживание"
+     class="site-logo">
+    <nav>
+      <a href="#home">Главная</a><a href="#about">О компании</a><a href="#services">Наша работа</a>
+      <a href="#benefits">Преимущества</a><a href="#reviews">Отзывы</a><a href="#products-services">Товары и услуги</a><a href="/calculator">Калькулятор услуг</a><a href="#contacts">Контакты</a><a href="#map">Карта</a>
+    </nav>
+    <a class="button small" href="tel:+79372696166">☎ Позвонить</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="home">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow">Бухгалтерия без лишних забот</span>
+        <h1>Бухгалтерское обслуживание для бизнеса</h1>
+        <p>Возьмём на себя учёт и отчётность, чтобы вы могли заниматься развитием своего дела.</p>
+        <div class="hero-actions">
+          <a class="button" href="#contacts">Оставить заявку <span>→</span></a>
+          <a class="button button-light" href="#services">Наши услуги</a>
+        </div>
+        <div class="trust">
+          <span><b>✓</b> Надёжно и в срок</span>
+          <span><b>%</b> Прозрачные цены</span>
+          <span><b>♡</b> Профессиональная команда</span>
+        </div>
+      </div>
+    <div class="hero-scene" aria-label="Иллюстрация рабочего места">
+    <div class="scene-wall">
+       <div class="plant">
+  <svg viewBox="0 0 100 150" aria-hidden="true">
+    <path d="M50 125 C25 105 75 95 48 75 C25 58 72 52 52 30 C45 20 55 12 65 8"
+          fill="none" stroke="#557c3d" stroke-width="3"
+          stroke-linecap="round"/>
+    <path d="M43 105 C22 100 17 85 18 76 C33 78 44 89 43 105Z"
+          fill="#688d48"/>
+    <path d="M57 82 C76 78 82 65 80 56 C65 59 55 69 57 82Z"
+          fill="#76994e"/>
+    <path d="M42 55 C25 48 24 35 28 28 C42 34 48 43 42 55Z"
+          fill="#688d48"/>
+    <path d="M58 30 C72 25 77 14 73 7 C61 12 55 20 58 30Z"
+          fill="#76994e"/>
+    <path d="M25 125 H75 L69 148 H31Z" fill="#c89e70"/>
+    <path d="M23 123 H77 V130 H23Z" fill="#b88960"/>
+  </svg>
+</div>
+        <div class="wall-brand">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="1С:БухОбслуживание">
+        </div>
+    </div>
+    <div class="desk"></div>
+    <div class="laptop"></div>
+   <div class="mug">
+    <img src="{{ url_for('static', filename='logo4.png') }}" alt="1С">
+</div>
+</div>
+  </section>
+
+  <section class="section" id="about">
+    <div class="container about-grid">
+      <div>
+        <h2>О компании</h2>
+        <p class="muted">Мы — команда специалистов по бухгалтерскому обслуживанию бизнеса. Помогаем компаниям и предпринимателям вести учёт, сдавать отчётность и экономить время и ресурсы.</p>
+        <p class="muted">Наша миссия — сделать бухгалтерию простой, прозрачной и надёжной для каждого клиента.</p>
+        <div class="stats">
+          <div><span class="stat-icon">▣</span><strong>13 лет</strong><small>на рынке</small></div>
+          <div><span class="stat-icon">♧</span><strong>70+</strong><small>клиентов</small></div>
+          <div><span class="stat-icon">▤</span><strong>Ежемесячно</strong><small>отчётность для клиентов</small></div>
+          <div><span class="stat-icon">◷</span><strong>24/7</strong><small>поддержка</small></div>
+        </div>
+      </div>
+      <div class="accounting-art" aria-label="Иллюстрация бухгалтерских документов">
+        <div class="paper"><span></span><div class="bars"><i></i><i></i><i></i><i></i><i></i></div></div>
+        <div class="calculator"><b></b><div class="keys">
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-grey" id="services">
+    <div class="container">
+      <h2>Чем мы занимаемся</h2>
+      <p class="muted section-intro">Подберём формат сопровождения под задачи и размер вашего бизнеса.</p>
+      <div class="cards">
+        <article class="card"><span class="service-icon">▦</span><h3>Бухгалтерское обслуживание</h3><p>Ведение учёта, подготовка и сдача отчётности.</p></article>
+        <article class="card"><span class="service-icon">♙</span><h3>Кадровое делопроизводство</h3><p>Оформление сотрудников, кадровые документы и отчёты.</p></article>
+        <article class="card"><span class="service-icon">↗</span><h3>Налоговое планирование</h3><p>Консультации и сопровождение налоговых вопросов.</p></article>
+        <article class="card"><span class="service-icon">☁</span><h3>1С:Предприятие</h3><p>Настройка, поддержка, обновления и доработка.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="benefits">
+    <div class="container">
+      <h2>Почему выбирают нас</h2>
+      <div class="benefits">
+        <article><span>♢</span><div><h3>Гарантия результата</h3><p>Ответственно относимся к качеству учёта и срокам, несем полную ответственность.</p></div></article>
+        <article><span>ϟ</span><div><h3>Оперативность</h3><p>Быстро отвечаем на вопросы и помогаем в работе.</p></div></article>
+        <article><span>★</span><div><h3>Опыт и экспертиза</h3><p>Профессиональная команда бухгалтеров.</p></div></article>
+        <article><span>₽</span><div><h3>Честные цены</h3><p>Прозрачная стоимость без неожиданных платежей.</p></div></article>
+        <article><span>🔒︎</span><div><h3>Защита данных</h3><p>Данные хранятся на защищенных серверах.</p></div></article>
+        <article><span>1</span><div><h3>Опыт и технологии</h3><p>«1С» — лидер на рынке бухгалтерского софта.</p></div></article>
+        <article><span>🤝</span><div><h3>Индивидуальный подход</h3><p>Подстраиваемся под ваши потребности.</p></div></article>
+        <article><span>◷</span><div><h3>Экономия времени</h3><p>Берем на себя задачи, чтобы вы сосредоточились на своем деле</p></div></article>
+      </div>
+    </div>
+  </section>
+
+ <section class="section section-grey" id="reviews">
+  <div class="container">
+ 
+<div class="reviews-heading">
+    <h2>Отзывы наших клиентов</h2>
+    <div class="average-rating">
+    <span class="rating-stars">
+        <span class="stars-empty">★★★★★</span>
+        <span class="stars-filled" style="width: {{ (average_rating / 5 * 100) if rating_count > 0 else 0 }}%">★★★★★</span>
+    </span>
+    <strong>{{ average_rating }} / 5</strong>
+    <span>({{ rating_count }})</span>
+</div>
+</div>
+
+    <div class="reviews-list">
+      {% if reviews %}
+        {% for review in reviews %}
+          <article class="review-card">
+            <div class="review-stars" aria-label="Оценка {{ review['rating'] }} из 5">
+              {% for star in range(1, 6) %}
+                {{ '★' if star <= review['rating'] else '☆' }}
+              {% endfor %}
+            </div>
+            <h3>{{ review['name'] }}</h3>
+            <p>{{ review['text'] }}</p>
+            <small>{{ review['created_at'][:10] }}</small>
+          </article>
+        {% endfor %}
+      {% else %}
+        <p class="reviews-empty">Пока нет опубликованных отзывов.</p>
+      {% endif %}
+    </div>
+
+    <div class="review-form-card">
+      <h3>Оставить отзыв</h3>
+      <p>Расскажите о своём опыте работы с нами.</p>
+
+      <form action="{{ url_for('submit_review') }}" method="post" class="review-form">
+        <label for="review_name">Ваше имя</label>
+        <input id="review_name" name="review_name" type="text" maxlength="100" required>
+
+        <label for="rating">Ваша оценка</label>
+        <select id="rating" name="rating" required>
+          <option value="5">★★★★★ — Отлично</option>
+          <option value="4">★★★★☆ — Хорошо</option>
+          <option value="3">★★★☆☆ — Нормально</option>
+          <option value="2">★★☆☆☆ — Плохо</option>
+          <option value="1">★☆☆☆☆ — Очень плохо</option>
+        </select>
+
+        <label for="review_text">Ваш отзыв</label>
+        <textarea id="review_text" name="review_text" maxlength="2000" rows="4" required></textarea>
+
+        <label class="review-consent" for="review_consent">
+          <input id="review_consent" type="checkbox" name="review_consent" value="yes" required>
+          Я согласен(на) на обработку персональных данных и ознакомился(лась) с
+            <a href="/privacy">политикой конфиденциальности</a>.
+        </label>
+
+        <button type="submit">Отправить отзыв</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="products-services">
+  <div class="container">
+    <h2>Товары и услуги</h2>
+    <p class="section-description">
+      Бухгалтерские услуги для вашего бизнеса
+    </p>
+<p style="font-size: 11px; color: #C2C2C2; margin-top: -15px;">
+  Больше и подробнее лично
+</p>
+    <div class="services-grid">
+      <div class="service-card">
+        <h3>Ведение бухгалтерского и налогового учета</h3>
+        <p class="service-subtitle">Комплексный сервис 1С:БухОбслуживание</p>
+        <p>Ведение бухгалтерского и налогового учета в 1С, сдача отчетности.</p>
+        <div class="service-price">1 500 ₽/час</div>
+      </div>
+
+      <div class="service-card">
+        <h3>Регистрация ООО и ИП</h3>
+        <p class="service-subtitle">Открытие бизнеса под ключ</p>
+        <p>Помощь с подготовкой документов и регистрацией бизнеса.</p>
+        <div class="service-price">цена по договоренности</div>
+      </div>
+
+      <div class="service-card">
+        <h3>Консультация специалиста</h3>
+        <p class="service-subtitle">Программа и консультация</p>
+        <p>Консультации по налогообложению, бухгалтерскому учету, обучение программе 1С.</p>
+        <div class="service-price">2 900 ₽</div>
+      </div>
+
+      <div class="service-card">
+        <h3>Расчет заработной платы</h3>
+        <p class="service-subtitle">Расчет ЗП</p>
+        <p>Расчет заработной платы.</p>
+        <div class="service-price">1 500 ₽/час</div>
+      </div>
+ 
+      <div class="service-card">
+        <h3>Закрытие ИП</h3>
+        <p class="service-subtitle">Прекращение деятельности ИП быстро и легко</p>
+        <p>Подготовка и подача документов для прекращения деятельности ИП.</p>
+        <div class="service-price">цена по договоренности</div>
+      </div>
+
+      <div class="service-card">
+        <h3>Упрощенная ликвидация ООО</h3>
+        <p class="service-subtitle">Закрытие ООО без сложной процедуры</p>
+        <p>Подготовка документов и сопровождение закрытия ООО.</p>
+        <div class="service-price">цена по договоренности</div>
+      </div>
+
+      <div class="service-card">
+        <h3>Кадровый учет и расчет зарплаты</h3>
+        <p class="service-subtitle">Кадровый учет и кадровое делопроизводство</p>
+        <p>Кадровый учет и расчет заработной платы.</p>
+        <div class="service-price">1 500 ₽/час</div>
+       </div>
+<div class="service-card calculator-card">
+   <h3>Калькулятор услуг</h3>
+<p class="calculator-subtitle">Рассчитайте предварительную стоимость бухгалтерского обслуживания.</p>    <a href="/calculator">Нажмите, чтобы открыть калькулятор →</a>
+</div>
+      </div>
+    </div>
+  </div>
+</section>
+  <section class="section" id="contacts">
+    <div class="container">
+      <h2>Контакты</h2>
+      <div class="contact-grid">
+        <div class="contact-info">
+          <p>☎ <strong><a href="tel:+79372696166">+7 (937) 269-61-66</a></strong><small>Звоните с 8:30 до 16:30</small></p>
+         <p>● <strong>Мессенджеры</strong><small><a href="https://wa.me/79372696166">WhatsApp</a>·<a href="https://web.max.ru/157974301">MAX</a></small></p>
+          <p>✉ <strong><a href="mailto:bo125651@yandex.ru">bo125651@yandex.ru</a></strong><small>Ответим на ваше письмо</small></p>
+          <p>⌖ <strong>г. Балаково, ул. Факел Социализма, д. 14</strong><small>
+        </div>
+        <div>
+          {% if sent %}<div class="notice">Спасибо! Заявка обработана в демонстрационном режиме.</div>{% endif %}
+          {% if error %}<div class="notice error">{{ error }}</div>{% endif %}
+      <form class="form" method="post" action="/submit">
+    <h3>Оставьте заявку</h3>
+    <p>Свяжемся с вами и обсудим задачу.</p>
+
+    <div class="form-row">
+        <input name="name" placeholder="Ваше имя" required maxlength="100">
+        <input name="phone" type="tel" placeholder="Телефон" required maxlength="40">
+    </div>
+<label for="email">Email</label>
+<input type="email" id="email" name="email" placeholder="Ваш email">
+<div class="questionnaire">
+    <h3>Информация о вашей компании</h3>
+
+    <div class="question-row">
+        <p>1. Название компании</p>
+        <input type="text" name="q1" placeholder="Название компании" maxlength="200" required>
+    </div>
+
+    <div class="question-row">
+        <p>2. Как давно работает компания?</p>
+        <input type="text" name="q2" placeholder="Например: 5 лет" maxlength="150" required>
+    </div>
+
+    <div class="question-row">
+        <p>3. Как ранее вели бухгалтерский учёт?</p>
+        <input type="text" name="q3" placeholder="Ваш ответ" maxlength="300" required>
+    </div>
+
+    <div class="question-row">
+        <p>4. Какая система налогообложения?</p>
+        <input type="text" name="q4" placeholder="Например: УСН 6%, ОСНО" maxlength="150" required>
+    </div>
+
+    <div class="question-row">
+        <p>5. Сфера деятельности</p>
+        <input type="text" name="q5" placeholder="Чем занимается компания?" maxlength="200" required>
+    </div>
+
+    <div class="question-row">
+        <p>6. Насколько активен бизнес?</p>
+        <input type="text" name="q6" placeholder="Опишите активность бизнеса" maxlength="200" required>
+    </div>
+
+    <div class="question-row">
+        <p>7. Количество сотрудников</p>
+        <input type="text" name="q7" placeholder="Укажите количество сотрудников" maxlength="100" required>
+    </div>
+
+    <div class="question-row">
+        <p>8. Какое программное обеспечение используете?</p>
+        <input type="text" name="q8" placeholder="Например: 1С" maxlength="200" required>
+    </div>
+
+    <div class="question-row">
+        <p>9. Используете ли вы кассы?</p>
+        <label><input type="radio" name="q9" value="Да" required> Да</label>
+        <label><input type="radio" name="q9" value="Нет" required> Нет</label>
+    </div>
+
+    <div class="question-row">
+        <p>10. Из какого региона вы обращаетесь?</p>
+        <input type="text" name="q10" placeholder="Укажите регион" maxlength="150" required>
+    </div>
+
+    <div class="question-row">
+        <p>11. Дополнительная информация</p>
+        <textarea name="message" placeholder="Укажите дополнительную информацию" maxlength="2000"></textarea>
+    </div>
+</div>
+<label class="consent">
+    <input type="checkbox" name="consent" value="yes" required>
+    <span>
+        Я согласен(на) на обработку персональных данных и ознакомился(лась) с
+        <a href="/privacy">политикой конфиденциальности</a>.
+    </span>
+</label>
+
+    <button class="button submit" type="submit">Отправить заявку →</button>
+</form>
+        </div>
+<section id="map">
+     <div style="position:relative;overflow:hidden;"><a href="https://yandex.ru/maps/org/1s_bukhobsluzhivaniye_tatverk/11966886410/?utm_medium=mapframe&utm_source=maps" style="color:#eee;font-size:12px;position:absolute;top:0px;">1С: БухОбслуживание. Татверк</a><a href="https://yandex.ru/maps/11143/balakovo/category/accountants/184105392/?utm_medium=mapframe&utm_source=maps" style="color:#eee;font-size:12px;position:absolute;top:14px;">Бухгалтерские услуги в Балакове</a><a href="https://yandex.ru/maps/11143/balakovo/category/outsourcing/265368577/?utm_medium=mapframe&utm_source=maps" style="color:#eee;font-size:12px;position:absolute;top:28px;">Аутсорсинг в Балакове</a><iframe src="https://yandex.ru/map-widget/v1/org/1s_bukhobsluzhivaniye_tatverk/11966886410/?ll=47.787828%2C52.031708&z=19.2" width="560" height="400" frameborder="1" allowfullscreen="true" style="position:relative;"></iframe></div>
+  </section>
+</main>
+
+<footer class="footer" id="privacy">
+  <div class="container footer-grid">
+   <a class="brand footer-brand" href="#home">
+    <img src="{{ url_for('static', filename='logo4.png') }}"
+         alt="Логотип 1С:БухОбслуживание"
+         class="footer-logo">
+</a>
+    <p><strong>ООО «Татверк»</strong><br>ИНН 6439080067</p>
+    <p><a href="/privacy">Политика конфиденциальности</a><br><a href="/privacy">Согласие на обработку персональных данных</a></p>
+    <p>© {{ year }} БухОбслуживание.<br>Все права защищены.</p>
+  </div>
+</footer>
+</body>
+</html>
