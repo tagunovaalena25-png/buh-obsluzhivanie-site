@@ -46,6 +46,9 @@ init_db()
 
 
 # ---------- ГЛАВНАЯ СТРАНИЦА ----------
+@app.route("/calculator")
+def calculator():
+    return render_template("calculator.html")
 
 @app.route("/", methods=["GET", "POST"])
 def index():
