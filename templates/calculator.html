@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -104,6 +103,14 @@ input:focus, select:focus {
     border-color: #9a8a43;
 }
 
+/* Поля ЗП и КУ серые и недоступные при ИП без работников */
+.salary-quantity:disabled {
+    background: #eeeeec;
+    color: #aaa;
+    border-color: #e5e5e2;
+    cursor: not-allowed;
+}
+
 select:disabled {
     background: #eeeeec;
     color: #aaa;
@@ -148,59 +155,6 @@ select:disabled {
     cursor: not-allowed;
 }
 
-.salary-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 13px;
-}
-
-.salary-item {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    min-width: 0;
-    padding: 12px;
-    border: 1px solid #dedbd5;
-    border-radius: 8px;
-    background: #fff;
-}
-
-.salary-item label {
-    min-height: 34px;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.salary-item span {
-    color: #666;
-    font-size: 12px;
-}
-
-.salary-item input {
-    min-height: 40px;
-}
-
-.salary-item:has(input:disabled) {
-    background: #eeeeec;
-    color: #aaa;
-}
-
-.salary-item:has(input:disabled) span {
-    color: #aaa;
-}
-
-/* Раздел ЗП и КУ остаётся видимым, но недоступным для ИП без работников */
-.section.disabled {
-    background: #eeeeec;
-}
-
-.section.disabled .service {
-    background: #eeeeec;
-    color: #aaa;
-    border-color: #e5e5e2;
-    cursor: not-allowed;
-}
-
 .reset {
     display: block;
     margin: 20px auto;
@@ -237,14 +191,14 @@ select:disabled {
     border-radius: 10px;
     padding: 16px;
     font-size: 18px;
-font-weight: bold;
+    font-weight: bold;
     box-shadow: 0 4px 18px rgba(0,0,0,.15);
     text-align: center;
 }
 
 .total-price {
-    font-size: 30px;
-    margin-top: 8px;
+    font-size: 27px;
+    margin-top: 7px;
 }
 
 .hidden-calculation {
@@ -284,26 +238,16 @@ font-weight: bold;
         gap: 13px;
     }
 
-    .service-grid,
-    .salary-grid {
+    .service-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 9px;
-    }
-
-    .salary-item {
-        padding: 10px;
-    }
-
-    .salary-item label {
-        min-height: 0;
-        font-size: 12px;
     }
 
     .service {
         min-height: 45px;
         font-size: 12px;
         padding: 10px;
-        overflow-wrap: anywhere;
+overflow-wrap: anywhere;
     }
 
     input, select {
@@ -329,8 +273,7 @@ font-weight: bold;
 
 @media(max-width: 360px) {
 
-    .service-grid,
-    .salary-grid {
+    .service-grid {
         grid-template-columns: 1fr;
     }
 
@@ -448,6 +391,7 @@ font-weight: bold;
 
 
 <!-- 3. ЗП И КУ -->
+
 <section class="section" id="salarySection">
 
     <div class="section-title">
@@ -455,32 +399,33 @@ font-weight: bold;
         <h2>ЗП И КУ</h2>
     </div>
 
-    <div class="salary-grid">
-        <div class="salary-item">
-            <label for="qty-citizens">Работники — граждане РФ</label>
-            <input type="number" id="qty-citizens" min="0" step="1" value="0" inputmode="numeric">
-            <span>375 ₽ за человека</span>
+    <div class="grid">
+
+        <div class="field">
+            <label for="salaryCitizens">Работники — граждане РФ (375 ₽ / ед.)</label>
+            <input type="number" id="salaryCitizens" class="salary-quantity" min="0" step="1" value="0">
         </div>
-        <div class="salary-item">
-            <label for="qty-foreignNo">Иностранцы без патента</label>
-            <input type="number" id="qty-foreignNo" min="0" step="1" value="0" inputmode="numeric">
-            <span>562,50 ₽ за человека</span>
+
+        <div class="field">
+            <label for="salaryForeignNo">Работники — иностранцы без патента (562,50 ₽ / ед.)</label>
+            <input type="number" id="salaryForeignNo" class="salary-quantity" min="0" step="1" value="0">
         </div>
-        <div class="salary-item">
-            <label for="qty-foreignYes">Иностранцы с патентом</label>
-            <input type="number" id="qty-foreignYes" min="0" step="1" value="0" inputmode="numeric">
-            <span>750 ₽ за человека</span>
+
+        <div class="field">
+            <label for="salaryForeignYes">Работники — иностранцы с патентом (750 ₽ / ед.)</label>
+            <input type="number" id="salaryForeignYes" class="salary-quantity" min="0" step="1" value="0">
         </div>
-        <div class="salary-item">
-            <label for="qty-vks">ВКС</label>
-            <input type="number" id="qty-vks" min="0" step="1" value="0" inputmode="numeric">
-            <span>1 500 ₽ за человека</span>
+
+        <div class="field">
+            <label for="salaryVks">ВКС (1 500 ₽ / ед.)</label>
+            <input type="number" id="salaryVks" class="salary-quantity" min="0" step="1" value="0">
         </div>
-        <div class="salary-item">
-            <label for="qty-gph">Подрядчики ФЛ ГПХ</label>
-            <input type="number" id="qty-gph" min="0" step="1" value="0" inputmode="numeric">
-            <span>750 ₽ за человека</span>
+
+        <div class="field">
+            <label for="salaryGph">Подрядчики ФЛ ГПХ (750 ₽ / ед.)</label>
+            <input type="number" id="salaryGph" class="salary-quantity" min="0" step="1" value="0">
         </div>
+
     </div>
 
 </section>
@@ -493,37 +438,27 @@ font-weight: bold;
         <h2>ПД</h2>
     </div>
 
-    <div class="salary-grid">
+    <div class="service-grid">
 
-        <div class="salary-item">
-            <label for="qty-payment">ПП кроме бюджетных</label>
-            <input type="number" id="qty-payment" min="0" step="1" value="0" inputmode="numeric">
-            <span>150 ₽ за единицу</span>
-        </div>
+        <button class="service" data-service="payment">
+            ПП кроме бюджетных
+        </button>
 
-        <div class="salary-item">
-            <label for="qty-receipts">Поступления</label>
-            <input type="number" id="qty-receipts" min="0" step="1" value="0" inputmode="numeric">
-            <span>225 ₽ за единицу</span>
-        </div>
+        <button class="service" data-service="receipts">
+            Поступления
+        </button>
 
-        <div class="salary-item">
-            <label for="qty-salesClient">Реализации (вносит клиент)</label>
-            <input type="number" id="qty-salesClient" min="0" step="1" value="0" inputmode="numeric">
-            <span>225 ₽ за единицу</span>
-        </div>
+        <button class="service" data-service="salesClient">
+            Реализации (вносит клиент)
+        </button>
 
-        <div class="salary-item">
-            <label for="qty-salesExecutor">Реализации (формирует исполнитель)</label>
-            <input type="number" id="qty-salesExecutor" min="0" step="1" value="0" inputmode="numeric">
-            <span>375 ₽ за единицу</span>
-        </div>
+        <button class="service" data-service="salesExecutor">
+            Реализации (формирует исполнитель)
+        </button>
 
-        <div class="salary-item">
-            <label for="qty-advance">Авансовые отчёты</label>
-            <input type="number" id="qty-advance" min="0" step="1" value="0" inputmode="numeric">
-            <span>375 ₽ за единицу</span>
-        </div>
+        <button class="service" data-service="advance">
+            Авансовые отчёты
+        </button>
 
     </div>
 
@@ -618,20 +553,20 @@ const TAX_OPTIONS = [
         value: "usn_psn",
         label: "УСН «Доходы» + ПСН",
         hours: 4.5,
-        vat: true
+        vat: false
     },
 
     {
         value: "usn_exp_psn",
         label: "УСН «Доходы - расходы» + ПСН",
         hours: 4.5,
-        vat: true
+        vat: false
     },
 
     {
         value: "osn_psn",
         label: "ОСН + ПСН",
-        hours: 5.2,
+        hours: 5.4,
         vat: false
     }
 
@@ -639,43 +574,75 @@ const TAX_OPTIONS = [
 
 
 /* =====================================
-   ЧАСЫ ПО НДС
+   НОРМАТИВЫ НДС
 ===================================== */
 
 const VAT_HOURS = {
     "0": 0,
-    vat57: 1,
-    vatOther: 1.5
+    vat57: 3,
+    vatOther: 5
 };
 
 
 /* =====================================
-   ДОПОЛНИТЕЛЬНЫЕ УСЛУГИ И ЧАСЫ
+   НОРМАТИВЫ ВСЕХ УСЛУГ
 ===================================== */
+
+const SALARY_UNIT_PRICES = {
+    salaryCitizens: 375,
+    salaryForeignNo: 562.50,
+    salaryForeignYes: 750,
+    salaryVks: 1500,
+    salaryGph: 750
+};
+
 
 const SERVICE_HOURS = {
 
-    account: 0.5,
-    kkt: 0.5,
-    trade: 0.5,
+    // Банк и финансы
+
+    account: 1,
+    factoring: 1,
+    credit: 0.5,
+    overdraft: 1,
+    leasing: 1,
+    currency: 2,
+
+    // ККТ и эквайринг
+
+    kkt: 1,
+    trade: 1,
     internet: 0.5,
-    patent: 1,
+    sbp: 0.5,
+
+    // Патенты
+
+    patent: 1.5,
+
+    // Маркетплейсы
+
     market: 1,
+    marketAccounting: 3,
+    pvz: 3,
 
-    // ЗП и КУ. Базовая ставка — 1500 ₽/час
+    // ЗП и КУ
 
-    citizens: 0.25,       // 375 ₽
-    foreignNo: 0.375,     // 562,50 ₽
-    foreignYes: 0.5,      // 750 ₽
-    vks: 1,               // 1 500 ₽
-    gph: 0.5,             // 750 ₽
+    citizens: 0.5,
+    foreignNo: 0.25,
+    foreignYes: 0.5,
+    vks: 1,
+    gph: 0.5,
+    maternity: 0.5,
+    disabled: 0.5,
+    student: 0.25,
 
     // Первичные документы
 
     payment: 0.1,
     receipts: 0.15,
     salesClient: 0.15,
-    salesExecutor: 0.25,advance: 0.25,
+    salesExecutor: 0.25,
+    advance: 0.25,
     commission: 0.5,
     offset: 0.25,
     reconciliation: 0.15
@@ -861,26 +828,14 @@ function updateVAT() {
 function updateSalary() {
 
     const salaryAvailable = currentOPF !== "ip_no";
-    const salaryInputs = ["citizens", "foreignNo", "foreignYes", "vks", "gph"];
 
-    salaryInputs.forEach(key => {
-        const input = document.getElementById("qty-" + key);
-
-        if (input) {
-            input.disabled = !salaryAvailable;
-
-            // Для ИП без работников обнуляем количество.
-            if (!salaryAvailable) {
-                input.value = 0;
-            }
-        }
+    document.querySelectorAll(".salary-quantity").forEach(input => {
+        input.disabled = !salaryAvailable;
+        if (!salaryAvailable) input.value = 0;
     });
 
-    document.getElementById("salarySection")
-        .classList.toggle("disabled", !salaryAvailable);
 }
-.classList.toggle("disabled", !salaryAvailable);
-}
+
 
 /* =====================================
    ДОПОЛНИТЕЛЬНЫЙ ПАТЕНТ
@@ -918,8 +873,7 @@ document.querySelectorAll("[data-service]").forEach(button => {
     button.addEventListener("click", function() {
 
         if (this.disabled) return;
-
-        const service = this.dataset.service;
+const service = this.dataset.service;
 
         selectedServices[service] =
             !selectedServices[service];
@@ -999,29 +953,14 @@ function calculate() {
     });
 
 
-    // Стоимость ЗП и КУ с учётом введённого количества людей
+    // Стоимость ЗП и КУ: количество единиц × фиксированная цена
 
-    const salaryKeys = ["citizens", "foreignNo", "foreignYes", "vks", "gph"];
-    let salaryHours = 0;
+    let salaryPrice = 0;
 
-    if (currentOPF !== "ip_no") {
-        salaryKeys.forEach(key => {
-            const quantityInput = document.getElementById("qty-" + key);
-            const quantity = Math.max(0, Math.floor(Number(quantityInput.value) || 0));
-            salaryHours += quantity * (SERVICE_HOURS[key] || 0);
-        });
-    }
-
-
-    // Первичные документы: стоимость зависит от количества единиц
-
-    const documentKeys = ["payment", "receipts", "salesClient", "salesExecutor", "advance"];
-    let documentHours = 0;
-
-    documentKeys.forEach(key => {
-        const quantityInput = document.getElementById("qty-" + key);
-        const quantity = Math.max(0, Math.floor(Number(quantityInput.value) || 0));
-        documentHours += quantity * (SERVICE_HOURS[key] || 0);
+    Object.entries(SALARY_UNIT_PRICES).forEach(([inputId, unitPrice]) => {
+        const input = document.getElementById(inputId);
+        const quantity = Math.max(0, Number(input.value) || 0);
+        salaryPrice += quantity * unitPrice;
     });
 
 
@@ -1030,48 +969,38 @@ function calculate() {
     const totalHours =
         baseHours +
         vatHours +
-        activityHours +
-        salaryHours +
-        documentHours;
+        activityHours;
 
 
     // Итоговая стоимость
 
-    const totalPrice = totalHours * hourPrice;
+    const totalPrice = totalHours * hourPrice + salaryPrice;
+
+
+    // Отображение результата
 
     document.getElementById("totalPrice").textContent =
-        totalPrice.toLocaleString("ru-RU", {
-            maximumFractionDigits: 2
-        }) + " ₽";
+        Math.round(totalPrice).toLocaleString("ru-RU") + " ₽";
 
 
-    // Скрытая информация о расчёте
+    // Скрытые данные расчёта
 
-    document.getElementById("hiddenCalculation").innerHTML = `
-        <div>Базовые часы: ${baseHours}</div>
-        <div>Часы НДС: ${vatHours}</div>
-        <div>Дополнительные услуги: ${activityHours}</div>
-<div>Часы ЗП и КУ: ${salaryHours}</div>
-        <div>Часы ПД: ${documentHours}</div>
-        <div>Всего часов: ${totalHours}</div>
-        <div>Стоимость часа: ${hourPrice}</div>
-        <div>Итого: ${totalPrice}</div>
-    `;
+    document.getElementById("hiddenCalculation").textContent =
+        "ОПФ: " + currentOPF +
+        "; Налоговый режим: " + taxValue +
+        "; Базовые часы: " + baseHours +
+        "; Часы НДС: " + vatHours +
+        "; Часы активностей: " + activityHours +
+        "; Стоимость ЗП и КУ: " + salaryPrice +
+        "; Всего часов: " + totalHours +
+        "; Ставка часа: " + hourPrice;
 
 }
+
+
 /* =====================================
-   ОБРАБОТЧИКИ ИЗМЕНЕНИЯ ПАРАМЕТРОВ
+   СМЕНА НАЛОГОВОГО РЕЖИМА
 ===================================== */
-
-// Изменение стоимости часа
-
-document.getElementById("hourPrice").addEventListener(
-    "input",
-    calculate
-);
-
-
-// Изменение системы налогообложения
 
 document.getElementById("tax").addEventListener(
     "change",
@@ -1087,7 +1016,9 @@ document.getElementById("tax").addEventListener(
 );
 
 
-// Изменение НДС
+/* =====================================
+   СМЕНА НДС
+===================================== */
 
 document.getElementById("vat").addEventListener(
     "change",
@@ -1095,63 +1026,28 @@ document.getElementById("vat").addEventListener(
 );
 
 
-// Изменение количества работников
+/* =====================================
+   СМЕНА СТОИМОСТИ ЧАСА
+===================================== */
 
-const salaryKeys = [
-    "citizens",
-    "foreignNo",
-    "foreignYes",
-    "vks",
-    "gph"
-];
+document.getElementById("hourPrice").addEventListener(
+    "input",
+    calculate
+);
 
-salaryKeys.forEach(key => {
-
-    const input = document.getElementById("qty-" + key);
-
+// Пересчёт при изменении количества работников и подрядчиков
+document.querySelectorAll(".salary-quantity").forEach(input => {
     input.addEventListener("input", calculate);
-
-});
-
-
-// Изменение количества первичных документов
-
-const documentKeys = [
-    "payment",
-    "receipts",
-    "salesClient",
-    "salesExecutor",
-    "advance"
-];
-
-documentKeys.forEach(key => {
-
-    const input = document.getElementById("qty-" + key);
-
-    input.addEventListener("input", calculate);
-
 });
 
 
 /* =====================================
-   СБРОС КАЛЬКУЛЯТОРА
+   СБРОС РАСЧЁТА
 ===================================== */
 
 function resetCalculator() {
 
-    // Возвращаем исходные параметры
-
-    document.getElementById("hourPrice").value = 1500;
-
-    document.getElementById("opf").value = "ip_no";
-
-    currentOPF = "ip_no";
-
-
-    // Сбрасываем выбранные услуги
-
     selectedServices = {};
-
 
     document.querySelectorAll("[data-service]").forEach(button => {
 
@@ -1159,59 +1055,23 @@ function resetCalculator() {
 
     });
 
+    document.getElementById("hourPrice").value = 1500;
 
-    // Обновляем налоговые режимы
+    document.querySelectorAll(".salary-quantity").forEach(input => {
+        input.value = 0;
+    });
 
-    updateTaxOptions();
+    currentOPF = "ip_no";
 
-
-    // Возвращаем НДС
+    document.getElementById("opf").value = "ip_no";
 
     document.getElementById("vat").value = "0";
 
-
-    // Обновляем доступность разделов
+    updateTaxOptions();
 
     updateSalary();
 
     updatePatent();
-
-
-    // Обнуляем количество работников
-
-    const salaryKeys = [
-        "citizens",
-        "foreignNo",
-        "foreignYes",
-        "vks",
-        "gph"
-    ];
-
-    salaryKeys.forEach(key => {
-
-        document.getElementById("qty-" + key).value = 0;
-
-    });
-
-
-    // Обнуляем количество первичных документов
-
-    const documentKeys = [
-        "payment",
-        "receipts",
-        "salesClient",
-        "salesExecutor",
-        "advance"
-    ];
-
-    documentKeys.forEach(key => {
-
-        document.getElementById("qty-" + key).value = 0;
-
-    });
-
-
-    // Пересчитываем стоимость
 
     calculate();
 
@@ -1219,7 +1079,7 @@ function resetCalculator() {
 
 
 /* =====================================
-   ПЕРВОНАЧАЛЬНЫЙ ЗАПУСК
+   ЗАПУСК КАЛЬКУЛЯТОРА
 ===================================== */
 
 updateTaxOptions();
