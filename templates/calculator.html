@@ -359,31 +359,37 @@ overflow-wrap: anywhere;
         <h2>ПРОЦЕДУРЫ</h2>
     </div>
 
-    <div class="service-grid">
+    <div class="grid">
 
-        <button class="service" data-service="account">
-            Дополнительный р/с
-        </button>
+        <div class="field">
+            <label for="procAccount">Дополнительный р/с (1 500 ₽ / ед.)</label>
+            <input type="number" id="procAccount" class="procedure-quantity" min="0" step="1" value="0">
+        </div>
 
-        <button class="service" data-service="kkt">
-            ККТ
-        </button>
+        <div class="field">
+            <label for="procKkt">ККТ (1 500 ₽ / ед.)</label>
+            <input type="number" id="procKkt" class="procedure-quantity" min="0" step="1" value="0">
+        </div>
 
-        <button class="service" data-service="trade">
-            Торговый эквайринг
-        </button>
+        <div class="field">
+            <label for="procTrade">Торговый эквайринг (1 500 ₽ / ед.)</label>
+            <input type="number" id="procTrade" class="procedure-quantity" min="0" step="1" value="0">
+        </div>
 
-        <button class="service" data-service="internet">
-            Интернет-эквайринг
-        </button>
+        <div class="field">
+            <label for="procInternet">Интернет-эквайринг (750 ₽ / ед.)</label>
+            <input type="number" id="procInternet" class="procedure-quantity" min="0" step="1" value="0">
+        </div>
 
-        <button class="service" data-service="patent" id="patentButton">
-            Дополнительный патент
-        </button>
+        <div class="field">
+            <label for="procPatent">Дополнительный патент (2 250 ₽ / ед.)</label>
+            <input type="number" id="procPatent" class="procedure-quantity" min="0" step="1" value="0">
+        </div>
 
-        <button class="service" data-service="market">
-            Договор с МП
-        </button>
+        <div class="field">
+            <label for="procMarket">Договор с МП (1 500 ₽ / ед.)</label>
+            <input type="number" id="procMarket" class="procedure-quantity" min="0" step="1" value="0">
+        </div>
 
     </div>
 
@@ -438,27 +444,32 @@ overflow-wrap: anywhere;
         <h2>ПД</h2>
     </div>
 
-    <div class="service-grid">
+    <div class="grid">
 
-        <button class="service" data-service="payment">
-            ПП кроме бюджетных
-        </button>
+        <div class="field">
+            <label for="pdPayment">ПП кроме бюджетных (150 ₽ / ед.)</label>
+            <input type="number" id="pdPayment" class="pd-quantity" min="0" step="1" value="0">
+        </div>
 
-        <button class="service" data-service="receipts">
-            Поступления
-        </button>
+        <div class="field">
+            <label for="pdReceipts">Поступления (225 ₽ / ед.)</label>
+            <input type="number" id="pdReceipts" class="pd-quantity" min="0" step="1" value="0">
+        </div>
 
-        <button class="service" data-service="salesClient">
-            Реализации (вносит клиент)
-        </button>
+        <div class="field">
+            <label for="pdSalesClient">Реализации (вносит клиент) (225 ₽ / ед.)</label>
+            <input type="number" id="pdSalesClient" class="pd-quantity" min="0" step="1" value="0">
+        </div>
 
-        <button class="service" data-service="salesExecutor">
-            Реализации (формирует исполнитель)
-        </button>
+        <div class="field">
+            <label for="pdSalesExecutor">Реализации (формирует исполнитель) (375 ₽ / ед.)</label>
+            <input type="number" id="pdSalesExecutor" class="pd-quantity" min="0" step="1" value="0">
+        </div>
 
-        <button class="service" data-service="advance">
-            Авансовые отчёты
-        </button>
+        <div class="field">
+            <label for="pdAdvance">Авансовые отчёты (375 ₽ / ед.)</label>
+            <input type="number" id="pdAdvance" class="pd-quantity" min="0" step="1" value="0">
+        </div>
 
     </div>
 
@@ -596,12 +607,29 @@ const SALARY_UNIT_PRICES = {
     salaryGph: 750
 };
 
+const PD_UNIT_PRICES = {
+    pdPayment: 150,
+    pdReceipts: 225,
+    pdSalesClient: 225,
+    pdSalesExecutor: 375,
+    pdAdvance: 375
+};
+
+const PROCEDURE_UNIT_PRICES = {
+    procAccount: 1500,
+    procKkt: 1500,
+    procTrade: 1500,
+    procInternet: 750,
+    procPatent: 2250,
+    procMarket: 1500
+};
+
 
 const SERVICE_HOURS = {
 
     // Банк и финансы
 
-    account: 1,
+    account: 0,
     factoring: 1,
     credit: 0.5,
     overdraft: 1,
@@ -610,18 +638,18 @@ const SERVICE_HOURS = {
 
     // ККТ и эквайринг
 
-    kkt: 1,
-    trade: 1,
-    internet: 0.5,
+    kkt: 0,
+    trade: 0,
+    internet: 0,
     sbp: 0.5,
 
     // Патенты
 
-    patent: 1.5,
+    patent: 0,
 
     // Маркетплейсы
 
-    market: 1,
+    market: 0,
     marketAccounting: 3,
     pvz: 3,
 
@@ -844,23 +872,24 @@ function updateSalary() {
 function updatePatent() {
 
     const taxValue = document.getElementById("tax").value;
-
-    const button = document.getElementById("patentButton");
-
     const allowed = PATENT_BY_OPF[currentOPF];
-
     const isAllowed = allowed.includes(taxValue);
+    const patentInput = document.getElementById("procPatent");
 
-    button.disabled = !isAllowed;
-
-    if (!isAllowed) {
-
-        selectedServices.patent = false;
-
-        button.classList.remove("active");
-
+    if (patentInput) {
+        patentInput.disabled = !isAllowed;
+        if (!isAllowed) patentInput.value = 0;
     }
 
+    // Сохраняем совместимость с прежней логикой кнопки патента, если она присутствует.
+    const button = document.getElementById("patentButton");
+    if (button) {
+        button.disabled = !isAllowed;
+        if (!isAllowed) {
+            selectedServices.patent = false;
+            button.classList.remove("active");
+        }
+    }
 }
 
 
@@ -963,6 +992,24 @@ function calculate() {
         salaryPrice += quantity * unitPrice;
     });
 
+    // Стоимость первичных документов: количество единиц × фиксированная цена
+    let pdPrice = 0;
+
+    Object.entries(PD_UNIT_PRICES).forEach(([inputId, unitPrice]) => {
+        const input = document.getElementById(inputId);
+        const quantity = Math.max(0, Number(input.value) || 0);
+        pdPrice += quantity * unitPrice;
+    });
+
+    // Стоимость процедур: количество единиц × фиксированная цена
+    let procedurePrice = 0;
+
+    Object.entries(PROCEDURE_UNIT_PRICES).forEach(([inputId, unitPrice]) => {
+        const input = document.getElementById(inputId);
+        const quantity = Math.max(0, Number(input.value) || 0);
+        procedurePrice += quantity * unitPrice;
+    });
+
 
     // Итоговые часы
 
@@ -974,7 +1021,7 @@ function calculate() {
 
     // Итоговая стоимость
 
-    const totalPrice = totalHours * hourPrice + salaryPrice;
+    const totalPrice = totalHours * hourPrice + salaryPrice + pdPrice + procedurePrice;
 
 
     // Отображение результата
@@ -992,6 +1039,8 @@ function calculate() {
         "; Часы НДС: " + vatHours +
         "; Часы активностей: " + activityHours +
         "; Стоимость ЗП и КУ: " + salaryPrice +
+        "; Стоимость ПД: " + pdPrice +
+        "; Стоимость процедур: " + procedurePrice +
         "; Всего часов: " + totalHours +
         "; Ставка часа: " + hourPrice;
 
@@ -1036,7 +1085,7 @@ document.getElementById("hourPrice").addEventListener(
 );
 
 // Пересчёт при изменении количества работников и подрядчиков
-document.querySelectorAll(".salary-quantity").forEach(input => {
+document.querySelectorAll(".salary-quantity, .pd-quantity, .procedure-quantity").forEach(input => {
     input.addEventListener("input", calculate);
 });
 
@@ -1057,7 +1106,7 @@ function resetCalculator() {
 
     document.getElementById("hourPrice").value = 1500;
 
-    document.querySelectorAll(".salary-quantity").forEach(input => {
+    document.querySelectorAll(".salary-quantity, .pd-quantity, .procedure-quantity").forEach(input => {
         input.value = 0;
     });
 
